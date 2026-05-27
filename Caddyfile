@@ -1,0 +1,17 @@
+{$DOMAIN} {
+    reverse_proxy web:80
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /data/access.log
+        format json
+    }
+}

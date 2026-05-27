@@ -1,0 +1,6 @@
+# Normalize line endings
+* text=auto
+
+# Shell scripts must stay LF (for Docker/Linux containers)
+*.sh text eol=lf
+docker/entrypoint-*.sh text eol=lf
