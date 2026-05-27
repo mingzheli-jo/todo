@@ -1,10 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import LoginPage from "./pages/LoginPage";
-
-function DashboardPlaceholder() {
-  return <div className="p-8 text-white/50">Dashboard — coming next</div>;
-}
+import DashboardPage from "./pages/DashboardPage";
+import Shell from "./components/layout/Shell";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isLoggedIn } = useAuth();
@@ -20,7 +18,11 @@ export default function App() {
         path="/*"
         element={
           <RequireAuth>
-            <DashboardPlaceholder />
+            <Shell>
+              <Routes>
+                <Route path="/" element={<DashboardPage />} />
+              </Routes>
+            </Shell>
           </RequireAuth>
         }
       />
