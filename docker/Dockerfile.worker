@@ -5,11 +5,15 @@ WORKDIR /app
 RUN pip install uv
 
 COPY backend/pyproject.toml ./
-RUN uv pip install --system -e "."
+RUN python3 -c "import tomllib; deps=tomllib.load(open('pyproject.toml','rb'))['project']['dependencies']; open('requirements.txt','w').write('\n'.join(deps))" \
+    && uv pip install --system -r requirements.txt \
+    && rm requirements.txt
 
 COPY backend/ ./
 COPY docker/entrypoint-worker.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+ENV PYTHONPATH=/app
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["celery", "-A", "app.tasks.celery_app", "worker", "--loglevel=info"]
