@@ -10,6 +10,9 @@ from app.db.base import Base
 from app.auth.models import User  # noqa: F401
 from app.tasks_domain.models import Task  # noqa: F401
 from app.projects.models import Project, PDCALog  # noqa: F401
+from app.okrs.models import OKR, task_okr_link  # noqa: F401
+from app.habits.models import Habit, HabitRecord  # noqa: F401
+from app.pomodoro.models import PomodoroSession  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
