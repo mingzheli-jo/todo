@@ -4,6 +4,7 @@ import { fetchProjects } from "../../api/projects";
 import { updateTask, deleteTask } from "../../api/tasks";
 import TaskDialog from "./TaskDialog";
 import type { Task, TaskStatus, Quadrant } from "../../types";
+import { safeIcon } from "../../lib/icon";
 
 interface Props {
   tasks: Task[];
@@ -298,7 +299,7 @@ export default function ListView({ tasks }: Props) {
                       <td className="px-3 py-2.5 text-white/50 whitespace-nowrap">
                         {project ? (
                           <span title={project.name}>
-                            {project.icon} {project.name}
+                            {safeIcon(project.icon)} {project.name}
                           </span>
                         ) : (
                           "—"

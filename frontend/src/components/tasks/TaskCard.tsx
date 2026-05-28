@@ -2,6 +2,7 @@ import type { Task } from "../../types";
 import { updateTask } from "../../api/tasks";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchProjects } from "../../api/projects";
+import { safeIcon } from "../../lib/icon";
 
 interface TaskCardProps {
   task: Task;
@@ -45,7 +46,7 @@ export default function TaskCard({ task, onEdit }: TaskCardProps) {
         </span>
         {project && (
           <span className="text-sm leading-none flex-shrink-0" title={project.name}>
-            {project.icon}
+            {safeIcon(project.icon)}
           </span>
         )}
       </div>

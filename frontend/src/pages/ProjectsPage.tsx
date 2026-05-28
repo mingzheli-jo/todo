@@ -5,6 +5,7 @@ import Dialog from "../components/ui/Dialog";
 import ProjectDetailDialog from "../components/projects/ProjectDetailDialog";
 import PDCAAdvanceDialog from "../components/projects/PDCAAdvanceDialog";
 import type { Project, PDCAPhase } from "../types";
+import { safeIcon } from "../lib/icon";
 
 const PHASE_LABEL: Record<PDCAPhase, string> = {
   plan: "计划",
@@ -138,6 +139,7 @@ export default function ProjectsPage() {
                 type="text"
                 value={form.icon}
                 onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
+                maxLength={2}
                 className="w-full px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm focus:outline-none focus:border-brand/50"
               />
             </div>
@@ -207,7 +209,7 @@ function ProjectCard({ project, onOpen, onAdvance }: CardProps) {
     >
       {/* Top row */}
       <div className="flex items-start gap-2">
-        <span className="text-2xl leading-none mt-0.5">{project.icon}</span>
+        <span className="text-2xl leading-none mt-0.5">{safeIcon(project.icon)}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-bold text-sm truncate">{project.name}</span>

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchPDCALogs, updateProject } from "../../api/projects";
 import { fetchTasks } from "../../api/tasks";
 import type { Project, PDCAPhase, PDCALog } from "../../types";
+import { safeIcon } from "../../lib/icon";
 
 const PHASE_LABEL: Record<PDCAPhase, string> = {
   plan: "计划",
@@ -116,7 +117,7 @@ export default function ProjectDetailDialog({ open, onClose, project }: Props) {
       <div className="relative w-full max-w-xl bg-surface-raised border border-white/[0.08] rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center gap-3 px-6 pt-5 pb-4 border-b border-white/[0.06] flex-shrink-0">
-          <span className="text-2xl">{project.icon}</span>
+          <span className="text-2xl">{safeIcon(project.icon)}</span>
           <h2 className="text-lg font-bold flex-1 truncate">{project.name}</h2>
           {project.is_archived && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/40">已归档</span>
@@ -179,6 +180,7 @@ export default function ProjectDetailDialog({ open, onClose, project }: Props) {
                     type="text"
                     value={icon}
                     onChange={(e) => setIcon(e.target.value)}
+                    maxLength={2}
                     className="w-full px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm focus:outline-none focus:border-brand/50"
                   />
                 </div>

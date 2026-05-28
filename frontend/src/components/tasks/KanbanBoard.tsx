@@ -5,6 +5,7 @@ import { fetchProjects } from "../../api/projects";
 import { updateTask } from "../../api/tasks";
 import TaskDialog from "./TaskDialog";
 import type { Task, TaskStatus } from "../../types";
+import { safeIcon } from "../../lib/icon";
 
 interface Props {
   tasks: Task[];
@@ -56,7 +57,7 @@ function KanbanCard({ task, projects, onEdit }: KanbanCardProps) {
         </span>
         {project && (
           <span className="text-sm leading-none flex-shrink-0" title={project.name}>
-            {project.icon}
+            {safeIcon(project.icon)}
           </span>
         )}
       </div>
