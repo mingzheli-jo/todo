@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Dialog from "../ui/Dialog";
 import { createTask, updateTask, deleteTask } from "../../api/tasks";
 import { fetchProjects } from "../../api/projects";
+import { fetchOKRs, linkTaskToOKR, unlinkTaskFromOKR, fetchTaskOKRs } from "../../api/okrs";
 import type { Task, Quadrant } from "../../types";
 
 interface Props {
@@ -19,12 +20,25 @@ export default function TaskDialog({ open, onClose, editTask, defaultQuadrant }:
   const [quadrant, setQuadrant] = useState<Quadrant>(defaultQuadrant ?? "neither");
   const [dueDate, setDueDate] = useState("");
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [selectedOKRIds, setSelectedOKRIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const { data: projects = [] } = useQuery({
     queryKey: ["projects", false],
     queryFn: () => fetchProjects(false),
     enabled: open,
+  });
+
+  const { data: allOKRs = [] } = useQuery({
+    queryKey: ["okrs"],
+    queryFn: () => fetchOKRs(),
+    enabled: open,
+  });
+
+  const { data: existingOKRLinks = [] } = useQuery({
+    queryKey: ["task-okrs", editTask?.id],
+    queryFn: () => fetchTaskOKRs(editTask!.id),
+    enabled: open && !!editTask,
   });
 
   useEffect(() => {
@@ -40,14 +54,22 @@ export default function TaskDialog({ open, onClose, editTask, defaultQuadrant }:
       setQuadrant(defaultQuadrant ?? "neither");
       setDueDate("");
       setProjectId(null);
+      setSelectedOKRIds([]);
     }
   }, [editTask, defaultQuadrant, open]);
+
+  useEffect(() => {
+    if (existingOKRLinks.length > 0) {
+      setSelectedOKRIds(existingOKRLinks.map((o) => o.id));
+    }
+  }, [existingOKRLinks]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
     setSaving(true);
     try {
+      let taskId: string;
       if (editTask) {
         await updateTask(editTask.id, {
           title,
@@ -56,16 +78,28 @@ export default function TaskDialog({ open, onClose, editTask, defaultQuadrant }:
           due_date: dueDate || undefined,
           project_id: projectId,
         });
+        taskId = editTask.id;
+        // Sync OKR links: diff existing vs selected
+        const existingIds = existingOKRLinks.map((o) => o.id);
+        const toAdd = selectedOKRIds.filter((id) => !existingIds.includes(id));
+        const toRemove = existingIds.filter((id) => !selectedOKRIds.includes(id));
+        await Promise.all([
+          ...toAdd.map((okrId) => linkTaskToOKR(okrId, taskId)),
+          ...toRemove.map((okrId) => unlinkTaskFromOKR(okrId, taskId)),
+        ]);
       } else {
-        await createTask({
+        const task = await createTask({
           title,
           description: description || undefined,
           quadrant,
           due_date: dueDate || undefined,
           project_id: projectId,
         });
+        taskId = task.id;
+        await Promise.all(selectedOKRIds.map((okrId) => linkTaskToOKR(okrId, taskId)));
       }
       qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["okrs"] });
       onClose();
     } finally {
       setSaving(false);
@@ -78,6 +112,18 @@ export default function TaskDialog({ open, onClose, editTask, defaultQuadrant }:
     qc.invalidateQueries({ queryKey: ["tasks"] });
     onClose();
   };
+
+  const toggleOKR = (okrId: string) => {
+    setSelectedOKRIds((prev) =>
+      prev.includes(okrId) ? prev.filter((id) => id !== okrId) : [...prev, okrId]
+    );
+  };
+
+  // Group KRs under their objectives for display
+  const objectives = allOKRs.filter((o) => o.type === "objective");
+  const standaloneKRs = allOKRs.filter(
+    (o) => o.type === "key_result" && !objectives.some((obj) => obj.id === o.parent_id)
+  );
 
   const quadrants: { value: Quadrant; label: string; color: string }[] = [
     { value: "urgent_important", label: "🔴 紧急重要", color: "border-q1/30 bg-q1/10" },
@@ -142,6 +188,70 @@ export default function TaskDialog({ open, onClose, editTask, defaultQuadrant }:
           onChange={(e) => setDueDate(e.target.value)}
           className="w-full px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm focus:outline-none focus:border-brand/50"
         />
+
+        {/* OKR linking */}
+        {allOKRs.length > 0 && (
+          <div>
+            <label className="text-xs text-white/40 mb-2 block">关联 OKR</label>
+            <div className="max-h-36 overflow-y-auto space-y-1 rounded-lg border border-white/[0.06] p-2 bg-white/[0.02]">
+              {objectives.map((obj) => {
+                const krs = allOKRs.filter(
+                  (o) => o.type === "key_result" && o.parent_id === obj.id
+                );
+                return (
+                  <div key={obj.id}>
+                    <div className="text-[10px] text-white/30 px-1 py-0.5 font-semibold uppercase tracking-wide">
+                      🎯 {obj.title}
+                    </div>
+                    {krs.map((kr) => (
+                      <button
+                        key={kr.id}
+                        type="button"
+                        onClick={() => toggleOKR(kr.id)}
+                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition ${
+                          selectedOKRIds.includes(kr.id)
+                            ? "bg-brand/15 text-brand-light border border-brand/25"
+                            : "text-white/50 hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        <span className={`w-3.5 h-3.5 rounded border flex-shrink-0 flex items-center justify-center text-[9px] ${
+                          selectedOKRIds.includes(kr.id)
+                            ? "bg-brand border-brand text-white"
+                            : "border-white/20"
+                        }`}>
+                          {selectedOKRIds.includes(kr.id) ? "✓" : ""}
+                        </span>
+                        🔑 {kr.title}
+                      </button>
+                    ))}
+                  </div>
+                );
+              })}
+              {standaloneKRs.map((kr) => (
+                <button
+                  key={kr.id}
+                  type="button"
+                  onClick={() => toggleOKR(kr.id)}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition ${
+                    selectedOKRIds.includes(kr.id)
+                      ? "bg-brand/15 text-brand-light border border-brand/25"
+                      : "text-white/50 hover:bg-white/[0.04]"
+                  }`}
+                >
+                  <span className={`w-3.5 h-3.5 rounded border flex-shrink-0 flex items-center justify-center text-[9px] ${
+                    selectedOKRIds.includes(kr.id)
+                      ? "bg-brand border-brand text-white"
+                      : "border-white/20"
+                  }`}>
+                    {selectedOKRIds.includes(kr.id) ? "✓" : ""}
+                  </span>
+                  🔑 {kr.title}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-3 pt-2">
           {editTask && (
             <button

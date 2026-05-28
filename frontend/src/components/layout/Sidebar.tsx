@@ -8,7 +8,7 @@ const NAV_GROUPS = [
       { icon: "📋", name: "任务看板", path: "/" },
       { icon: "📅", name: "时间线", path: "/timeline", disabled: true },
       { icon: "📁", name: "项目", path: "/projects" },
-      { icon: "🎯", name: "OKR 目标", path: "/okrs", disabled: true },
+      { icon: "🎯", name: "OKR 目标", path: "/okrs" },
     ],
   },
   {
@@ -16,8 +16,8 @@ const NAV_GROUPS = [
     items: [
       { icon: "📝", name: "每日复盘", path: "/reviews" },
       { icon: "📊", name: "周/月汇总", path: "/summaries", disabled: true },
-      { icon: "🔥", name: "习惯打卡", path: "/habits", disabled: true },
-      { icon: "🍅", name: "番茄钟", path: "/pomodoro", disabled: true },
+      { icon: "🔥", name: "习惯打卡", path: "/habits" },
+      { icon: "🍅", name: "番茄钟", path: "/pomodoro" },
     ],
   },
   {
