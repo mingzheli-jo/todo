@@ -1,3 +1,4 @@
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 const NAV_GROUPS = [
@@ -13,7 +14,7 @@ const NAV_GROUPS = [
   {
     label: "个人成长",
     items: [
-      { icon: "📝", name: "每日复盘", path: "/reviews", disabled: true },
+      { icon: "📝", name: "每日复盘", path: "/reviews" },
       { icon: "📊", name: "周/月汇总", path: "/summaries", disabled: true },
       { icon: "🔥", name: "习惯打卡", path: "/habits", disabled: true },
       { icon: "🍅", name: "番茄钟", path: "/pomodoro", disabled: true },
@@ -22,7 +23,7 @@ const NAV_GROUPS = [
   {
     label: "系统",
     items: [
-      { icon: "🤖", name: "AI 配置", path: "/settings/ai", disabled: true },
+      { icon: "🤖", name: "AI 配置", path: "/settings/ai" },
       { icon: "📢", name: "飞书推送", path: "/settings/feishu", disabled: true },
       { icon: "⚙️", name: "设置", path: "/settings", disabled: true },
     ],
@@ -31,6 +32,12 @@ const NAV_GROUPS = [
 
 export default function Sidebar() {
   const { logout } = useAuth();
+  const { pathname } = useLocation();
+
+  const isActive = (path: string) => {
+    if (path === "/") return pathname === "/";
+    return pathname === path || pathname.startsWith(path + "/");
+  };
 
   return (
     <aside className="w-60 bg-gradient-to-b from-surface-raised to-surface border-r border-white/[0.06] flex flex-col flex-shrink-0">
@@ -49,20 +56,30 @@ export default function Sidebar() {
             <div className="px-2 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/25">
               {group.label}
             </div>
-            {group.items.map((item) => (
-              <a
-                key={item.path}
-                href={item.disabled ? undefined : item.path}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition ${
-                  item.path === "/"
-                    ? "bg-gradient-to-r from-brand/15 to-brand-light/10 text-purple-300 font-medium"
-                    : "text-white/40 hover:bg-white/[0.04] hover:text-white/70"
-                } ${item.disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
-              >
-                <span className="text-base w-5 text-center">{item.icon}</span>
-                {item.name}
-              </a>
-            ))}
+            {group.items.map((item) => {
+              const active = !item.disabled && isActive(item.path);
+              const className = `flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition ${
+                active
+                  ? "bg-gradient-to-r from-brand/15 to-brand-light/10 text-purple-300 font-medium"
+                  : "text-white/40 hover:bg-white/[0.04] hover:text-white/70"
+              } ${item.disabled ? "opacity-40 cursor-not-allowed pointer-events-none" : "cursor-pointer"}`;
+
+              if (item.disabled) {
+                return (
+                  <span key={item.path} className={className}>
+                    <span className="text-base w-5 text-center">{item.icon}</span>
+                    {item.name}
+                  </span>
+                );
+              }
+
+              return (
+                <Link key={item.path} to={item.path} className={className}>
+                  <span className="text-base w-5 text-center">{item.icon}</span>
+                  {item.name}
+                </Link>
+              );
+            })}
           </div>
         ))}
       </nav>
