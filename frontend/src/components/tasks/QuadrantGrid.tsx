@@ -18,7 +18,7 @@ export default function QuadrantGrid({ tasks, onEdit }: Props) {
   );
 
   return (
-    <div className="grid grid-cols-2 grid-rows-2 gap-4 h-full">
+    <div className="grid grid-cols-2 grid-rows-[minmax(280px,1fr)_minmax(280px,1fr)] gap-4 min-h-full">
       {QUADRANTS.map((q) => (
         <QuadrantColumn key={q} quadrant={q} tasks={grouped[q]} onEdit={onEdit} />
       ))}

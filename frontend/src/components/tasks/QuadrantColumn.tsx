@@ -18,9 +18,9 @@ export default function QuadrantColumn({ quadrant, tasks, onEdit }: Props) {
   const cfg = QUADRANT_CONFIG[quadrant];
   return (
     <div
-      className={`rounded-[14px] p-4 bg-gradient-to-br ${cfg.bg} border ${cfg.border} relative overflow-hidden`}
+      className={`rounded-[14px] p-4 bg-gradient-to-br ${cfg.bg} border ${cfg.border} relative overflow-hidden h-full flex flex-col`}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <div className="flex items-center gap-2 text-[13px] font-semibold">
           <span>{cfg.dot}</span> {cfg.label}
         </div>
@@ -28,7 +28,7 @@ export default function QuadrantColumn({ quadrant, tasks, onEdit }: Props) {
           {tasks.length} 项
         </span>
       </div>
-      <div className="space-y-2 overflow-y-auto max-h-[calc(100%-40px)]">
+      <div className="space-y-2 overflow-y-auto flex-1">
         {tasks.map((t) => (
           <TaskCard key={t.id} task={t} onEdit={onEdit} />
         ))}
