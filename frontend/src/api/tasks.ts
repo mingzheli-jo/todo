@@ -6,14 +6,14 @@ export async function fetchTasks(params?: { quadrant?: Quadrant; status?: TaskSt
   return resp.data;
 }
 
-export async function createTask(data: { title: string; quadrant?: Quadrant; description?: string; due_date?: string }) {
+export async function createTask(data: { title: string; quadrant?: Quadrant; description?: string; due_date?: string; project_id?: string | null }) {
   const resp = await client.post<Task>("/tasks", data);
   return resp.data;
 }
 
 export async function updateTask(
   id: string,
-  data: Partial<{ title: string; quadrant: Quadrant; status: TaskStatus; description: string; due_date: string; priority: number }>
+  data: Partial<{ title: string; quadrant: Quadrant; status: TaskStatus; description: string; due_date: string; priority: number; project_id: string | null }>
 ) {
   const resp = await client.patch<Task>(`/tasks/${id}`, data);
   return resp.data;

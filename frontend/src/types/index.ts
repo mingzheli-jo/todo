@@ -32,6 +32,16 @@ export interface Project {
   created_at: string;
 }
 
+export interface PDCALog {
+  id: string;
+  project_id: string;
+  cycle: number;
+  phase: PDCAPhase;
+  content: string;
+  outcome: string | null;
+  created_at: string;
+}
+
 export interface TodayStats {
   completed: number;
   pending: number;
