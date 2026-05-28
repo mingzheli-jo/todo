@@ -110,13 +110,32 @@ cd frontend && npx tsc -b
 
 ## 生产部署
 
-详见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+### 一键部署（推荐，新机器适用）
+
+在一台装好 Docker 的服务器上：
 
 ```bash
-cp .env.example .env
-nano .env        # 填入生产密钥
-./deploy.sh      # 构建、启动、验证健康检查
+git clone <repo> toto && cd toto
+./bootstrap.sh   # 交互生成 .env，构建镜像，启动全栈，签发 HTTPS 证书
 ```
+
+脚本会：
+- 检查 Docker / 端口 80,443 / DNS 是否指向本机
+- 提示输入 **域名**、**管理员账号密码**
+- 自动生成 `JWT_SECRET` / `ENCRYPTION_KEY` (Fernet) / `POSTGRES_PASSWORD`
+- 用 api 容器里的 bcrypt 哈希管理员密码
+- 跑 `alembic upgrade head` 初始化数据库
+- 等 Caddy 拿到 Let's Encrypt 证书
+
+### 升级 / 重新部署
+
+代码更新后：
+
+```bash
+./deploy.sh      # 拉新代码、重建镜像、滚动重启
+```
+
+详见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ## 备份与恢复
 
