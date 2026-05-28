@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
@@ -79,8 +79,8 @@ async def stats_overview(
     completed_last_7: list[dict] = []
     for i in range(6, -1, -1):
         day = today - timedelta(days=i)
-        day_start = f"{day}T00:00:00"
-        day_end = f"{day}T23:59:59"
+        day_start = datetime.combine(day, time.min, tzinfo=timezone.utc)
+        day_end = datetime.combine(day, time.max, tzinfo=timezone.utc)
         cnt = (
             await db.execute(
                 select(func.count()).select_from(Task).where(
