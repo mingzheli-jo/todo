@@ -25,6 +25,9 @@ from app.api.deps import get_db
 # Ensure new models are registered with Base metadata
 import app.ai_providers.models  # noqa: F401
 import app.reviews.models  # noqa: F401
+import app.okrs.models  # noqa: F401
+import app.habits.models  # noqa: F401
+import app.pomodoro.models  # noqa: F401
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
