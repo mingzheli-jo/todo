@@ -38,31 +38,35 @@ export default function TaskDialog({ open, onClose, editTask, defaultQuadrant }:
   const { data: existingOKRLinks = [] } = useQuery({
     queryKey: ["task-okrs", editTask?.id],
     queryFn: () => fetchTaskOKRs(editTask!.id),
-    enabled: open && !!editTask,
+    enabled: open && !!editTask?.id,
   });
 
   useEffect(() => {
-    if (editTask) {
-      setTitle(editTask.title);
-      setDescription(editTask.description ?? "");
-      setQuadrant(editTask.quadrant);
-      setDueDate(editTask.due_date ?? "");
-      setProjectId(editTask.project_id ?? null);
-    } else {
+    if (!open) return;
+    if (editTask === null || editTask === undefined) {
+      // New task: clear everything immediately, including OKR selection
       setTitle("");
       setDescription("");
       setQuadrant(defaultQuadrant ?? "neither");
       setDueDate("");
       setProjectId(null);
       setSelectedOKRIds([]);
+      return;
     }
-  }, [editTask, defaultQuadrant, open]);
+    // Edit: populate basic fields; OKR ids will be set by the separate effect below
+    setTitle(editTask.title);
+    setDescription(editTask.description ?? "");
+    setQuadrant(editTask.quadrant);
+    setDueDate(editTask.due_date ?? "");
+    setProjectId(editTask.project_id ?? null);
+  }, [open, editTask, defaultQuadrant]);
 
+  // Separate effect for OKR sync — only fires when editing an existing task
   useEffect(() => {
-    if (existingOKRLinks.length > 0) {
+    if (editTask?.id && existingOKRLinks.length > 0) {
       setSelectedOKRIds(existingOKRLinks.map((o) => o.id));
     }
-  }, [existingOKRLinks]);
+  }, [editTask?.id, existingOKRLinks]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
