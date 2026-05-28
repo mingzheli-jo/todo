@@ -3,9 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:toto/core/auth/auth_provider.dart';
 import 'package:toto/features/auth/login_screen.dart';
+import 'package:toto/features/habits/habits_screen.dart';
 import 'package:toto/features/home/home_screen.dart';
+import 'package:toto/features/okrs/okrs_screen.dart';
 import 'package:toto/features/pomodoro/pomodoro_screen.dart';
 import 'package:toto/features/profile/profile_screen.dart';
+import 'package:toto/features/projects/projects_screen.dart';
+import 'package:toto/features/reviews/reviews_screen.dart';
+import 'package:toto/features/settings/settings_screen.dart';
 import 'package:toto/features/tasks/tasks_screen.dart';
 import 'package:toto/shell/root_shell.dart';
 
@@ -48,6 +53,26 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/pomodoro',
             builder: (_, __) => const PomodoroScreen(),
+          ),
+          GoRoute(
+            path: '/habits',
+            builder: (_, __) => const HabitsScreen(),
+          ),
+          GoRoute(
+            path: '/reviews',
+            builder: (_, __) => const ReviewsScreen(),
+          ),
+          GoRoute(
+            path: '/okrs',
+            builder: (_, __) => const OKRsScreen(),
+          ),
+          GoRoute(
+            path: '/projects',
+            builder: (_, __) => const ProjectsScreen(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (_, __) => const SettingsScreen(),
           ),
           GoRoute(
             path: '/profile',

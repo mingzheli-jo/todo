@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:toto/core/auth/auth_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -60,26 +61,56 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // Coming soon section
+          // Feature entries
+          Card(
+            child: Column(
+              children: [
+                _ProfileTile(
+                  icon: Icons.today_outlined,
+                  label: '每日复盘',
+                  onTap: () => context.push('/reviews'),
+                ),
+                const Divider(height: 1, indent: 56),
+                _ProfileTile(
+                  icon: Icons.event_repeat_outlined,
+                  label: '习惯打卡',
+                  onTap: () => context.push('/habits'),
+                ),
+                const Divider(height: 1, indent: 56),
+                _ProfileTile(
+                  icon: Icons.flag_outlined,
+                  label: '目标 OKR',
+                  onTap: () => context.push('/okrs'),
+                ),
+                const Divider(height: 1, indent: 56),
+                _ProfileTile(
+                  icon: Icons.folder_outlined,
+                  label: '项目',
+                  onTap: () => context.push('/projects'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           Card(
             child: Column(
               children: [
                 _ProfileTile(
                   icon: Icons.auto_awesome_outlined,
-                  label: 'AI 配置',
-                  onTap: () => _showComingSoon(context),
+                  label: 'AI 配置（请到 Web 端）',
+                  onTap: () => _showWebOnly(context),
                 ),
                 const Divider(height: 1, indent: 56),
                 _ProfileTile(
                   icon: Icons.send_outlined,
-                  label: '飞书推送配置',
-                  onTap: () => _showComingSoon(context),
+                  label: '飞书推送（请到 Web 端）',
+                  onTap: () => _showWebOnly(context),
                 ),
                 const Divider(height: 1, indent: 56),
                 _ProfileTile(
                   icon: Icons.settings_outlined,
                   label: '系统设置',
-                  onTap: () => _showComingSoon(context),
+                  onTap: () => context.push('/settings'),
                 ),
               ],
             ),
@@ -109,9 +140,9 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  void _showComingSoon(BuildContext context) {
+  void _showWebOnly(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Phase 7D 即将实现')),
+      const SnackBar(content: Text('此项请在 Web 端配置')),
     );
   }
 
