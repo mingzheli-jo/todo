@@ -1,14 +1,30 @@
 import asyncio
+import os
 import uuid
 from collections.abc import AsyncGenerator
+
+# Set encryption key BEFORE any app imports so get_settings() picks it up on first call
+from cryptography.fernet import Fernet
+_TEST_FERNET_KEY = Fernet.generate_key().decode()
+os.environ["ENCRYPTION_KEY"] = _TEST_FERNET_KEY
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from app.config import get_settings
+# Clear the lru_cache so get_settings re-reads the env var we just set
+get_settings.cache_clear()
+
 from app.auth.models import User
 from app.auth.password import hash_password
 from app.db.base import Base
 from app.main import create_app
 from app.api.deps import get_db
+
+# Ensure new models are registered with Base metadata
+import app.ai_providers.models  # noqa: F401
+import app.reviews.models  # noqa: F401
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
