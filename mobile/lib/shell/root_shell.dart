@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toto/features/tasks/widgets/task_form_sheet.dart';
 
 class RootShell extends StatelessWidget {
   const RootShell({super.key, required this.child});
@@ -70,57 +71,23 @@ class RootShell extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => const _QuickAddSheet(),
+      builder: (_) => const TaskFormSheet(),
     );
   }
 
   int _locationToIndex(String location) {
     if (location == '/tasks') return 1;
     if (location == '/pomodoro') return 3;
-    if (location == '/profile') return 4;
+    // Pages reachable from profile tab keep the profile tab highlighted
+    if (location == '/profile' ||
+        location == '/reviews' ||
+        location == '/habits' ||
+        location == '/okrs' ||
+        location == '/projects' ||
+        location == '/settings') {
+      return 4;
+    }
     return 0; // '/' → home
   }
 }
 
-class _QuickAddSheet extends StatelessWidget {
-  const _QuickAddSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '快速添加任务',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: Text(
-              'Phase 7B 即将实现',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-          const SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
-}

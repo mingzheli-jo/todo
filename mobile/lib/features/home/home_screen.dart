@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:toto/core/auth/auth_provider.dart';
 import 'package:toto/core/theme.dart';
+import 'package:toto/features/tasks/task_models.dart';
+import 'package:toto/features/tasks/task_provider.dart';
 
 // ---------------------------------------------------------------------------
-// Stats provider
+// Today stats — derived from tasks provider
 // ---------------------------------------------------------------------------
 
 class TodayStats {
@@ -17,18 +20,32 @@ class TodayStats {
   final int completed;
   final int pending;
   final int total;
-
-  factory TodayStats.fromJson(Map<String, dynamic> json) => TodayStats(
-        completed: json['completed'] as int? ?? 0,
-        pending: json['pending'] as int? ?? 0,
-        total: json['total'] as int? ?? 0,
-      );
 }
 
-final todayStatsProvider = FutureProvider<TodayStats>((ref) async {
-  // Placeholder stats — Phase 7B will wire up the real /stats/today endpoint.
-  ref.watch(authRepositoryProvider); // keep auth dependency for session scope
-  return const TodayStats(completed: 0, pending: 0, total: 0);
+final todayStatsProvider = Provider<TodayStats>((ref) {
+  final state = ref.watch(tasksProvider);
+  if (state is! TasksLoaded) {
+    return const TodayStats(completed: 0, pending: 0, total: 0);
+  }
+  final now = DateTime.now();
+  final startOfDay = DateTime(now.year, now.month, now.day);
+  final endOfDay = startOfDay.add(const Duration(days: 1));
+  int completed = 0;
+  int pending = 0;
+  for (final t in state.tasks) {
+    final completedToday = t.completedAt != null &&
+        t.completedAt!.isAfter(startOfDay) &&
+        t.completedAt!.isBefore(endOfDay);
+    if (completedToday) completed++;
+    if (t.status == TaskStatus.todo || t.status == TaskStatus.inProgress) {
+      pending++;
+    }
+  }
+  return TodayStats(
+    completed: completed,
+    pending: pending,
+    total: completed + pending,
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -45,7 +62,8 @@ class HomeScreen extends ConsumerWidget {
       AuthAuthenticated(:final user) => user.username,
       _ => '',
     };
-    final statsAsync = ref.watch(todayStatsProvider);
+    final stats = ref.watch(todayStatsProvider);
+    final tasksState = ref.watch(tasksProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -68,67 +86,57 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Greeting
-            Text(
-              '你好，$username',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '今天也要专注完成重要的事',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 24),
-            // Today stats card
-            Text(
-              '今日统计',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            statsAsync.when(
-              data: (stats) => _StatsRow(stats: stats),
-              loading: () => const _StatsRowLoading(),
-              error: (_, __) => const _StatsRowError(),
-            ),
-            const SizedBox(height: 24),
-            // Quadrant placeholder
-            Text(
-              '四象限缩览',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            _QuadrantPreview(),
-            const SizedBox(height: 24),
-            // Habits placeholder
-            Text(
-              '今日习惯',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'Phase 7B 即将实现',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(tasksProvider.notifier).refresh(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '你好，$username',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                '今天也要专注完成重要的事',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                '今日统计',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              if (tasksState is TasksLoading)
+                const _StatsRowLoading()
+              else
+                _StatsRow(stats: stats),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Text(
+                    '四象限缩览',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => context.go('/tasks'),
+                    child: const Text('查看全部'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _QuadrantSummary(state: tasksState),
+            ],
+          ),
         ),
       ),
     );
@@ -145,7 +153,7 @@ class _StatsRow extends StatelessWidget {
       children: [
         Expanded(
           child: _StatCard(
-            label: '已完成',
+            label: '今日完成',
             value: stats.completed.toString(),
             color: const Color(0xFF6366f1),
           ),
@@ -161,7 +169,7 @@ class _StatsRow extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: _StatCard(
-            label: '总任务',
+            label: '总活跃',
             value: stats.total.toString(),
             color: kQuadrantBlue,
           ),
@@ -227,45 +235,38 @@ class _StatsRowLoading extends StatelessWidget {
   }
 }
 
-class _StatsRowError extends StatelessWidget {
-  const _StatsRowError();
+class _QuadrantSummary extends StatelessWidget {
+  const _QuadrantSummary({required this.state});
+  final TasksState state;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Text(
-          '统计数据加载失败',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ),
-    );
-  }
-}
-
-class _QuadrantPreview extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    const quadrants = [
-      ('紧急 & 重要', kQuadrantRed),
-      ('重要 & 不急', kQuadrantAmber),
-      ('紧急 & 不重要', kQuadrantBlue),
-      ('不紧急 & 不重要', kQuadrantGray),
-    ];
-
+    final counts = <Quadrant, int>{
+      for (final q in Quadrant.values) q: 0,
+    };
+    if (state is TasksLoaded) {
+      for (final t in (state as TasksLoaded).tasks) {
+        if (t.status == TaskStatus.todo ||
+            t.status == TaskStatus.inProgress) {
+          counts[t.quadrant] = (counts[t.quadrant] ?? 0) + 1;
+        }
+      }
+    }
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
-      childAspectRatio: 1.8,
+      childAspectRatio: 1.9,
       children: [
-        for (final (label, color) in quadrants)
+        for (final q in Quadrant.values)
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -275,28 +276,30 @@ class _QuadrantPreview extends StatelessWidget {
                         width: 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: color,
+                          color: q.color,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          label,
+                          q.label,
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
                   const Spacer(),
                   Text(
-                    'Phase 7B',
+                    '${counts[q] ?? 0}',
                     style: TextStyle(
-                      fontSize: 10,
-                      color: color.withValues(alpha: 0.7),
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: q.color,
                     ),
                   ),
                 ],

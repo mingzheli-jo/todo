@@ -8,21 +8,21 @@ import 'package:toto/core/auth/auth_repository.dart';
 // Providers for infrastructure singletons
 // ---------------------------------------------------------------------------
 
-final _secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
+final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
   return const FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 });
 
-final _dioClientProvider = Provider<DioClient>((ref) {
-  final storage = ref.watch(_secureStorageProvider);
+final dioClientProvider = Provider<DioClient>((ref) {
+  final storage = ref.watch(secureStorageProvider);
   return DioClient(storage);
 });
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(
-    dioClient: ref.watch(_dioClientProvider),
-    storage: ref.watch(_secureStorageProvider),
+    dioClient: ref.watch(dioClientProvider),
+    storage: ref.watch(secureStorageProvider),
   );
 });
 
@@ -95,6 +95,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final authProvider =
     StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repo = ref.watch(authRepositoryProvider);
-  final dioClient = ref.watch(_dioClientProvider);
+  final dioClient = ref.watch(dioClientProvider);
   return AuthNotifier(repo, dioClient);
 });
