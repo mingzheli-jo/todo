@@ -19,6 +19,13 @@ const VIEW_TABS: { key: ViewKey; label: string }[] = [
 
 const LS_KEY = "toto_view";
 
+const WEEKDAY_CN = ["日", "一", "二", "三", "四", "五", "六"];
+
+function formatToday(): string {
+  const now = new Date();
+  return `今天 ${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 周${WEEKDAY_CN[now.getDay()]}`;
+}
+
 function readStoredView(): ViewKey {
   try {
     const v = localStorage.getItem(LS_KEY);
@@ -59,6 +66,7 @@ export default function DashboardPage() {
       <header className="px-7 py-4 border-b border-white/[0.06] flex items-center justify-between">
         <div className="flex items-center gap-5">
           <h1 className="text-xl font-bold">📋 任务看板</h1>
+          <span className="text-xs text-white/40">{formatToday()}</span>
           <div className="flex gap-0.5 bg-white/[0.04] rounded-lg p-0.5">
             {VIEW_TABS.map(({ key, label }) => (
               <button

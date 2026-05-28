@@ -193,6 +193,28 @@ export interface AISummary {
   created_at: string;
 }
 
+// Stats Overview
+export interface StatsOverview {
+  tasks: {
+    total: number;
+    completed: number;
+    completion_rate: number;
+    completed_last_7_days: { date: string; count: number }[];
+    by_quadrant_active: {
+      urgent_important: number;
+      important: number;
+      urgent: number;
+      neither: number;
+    };
+  };
+  pomodoro: {
+    total_minutes_all_time: number;
+  };
+  projects: { id: string; name: string; icon: string; pdca_phase: string; pdca_cycle: number }[];
+  okrs_top: { id: string; title: string; progress: number }[];
+  habits_weekly: { id: string; name: string; icon: string; completion_rate: number }[];
+}
+
 // Feishu types
 export interface FeishuConfigOut {
   has_webhook: boolean;

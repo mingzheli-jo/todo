@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useTheme } from "../../hooks/useTheme";
 
 const NAV_GROUPS = [
   {
@@ -9,6 +10,7 @@ const NAV_GROUPS = [
       { icon: "📅", name: "时间线", path: "/timeline", disabled: true },
       { icon: "📁", name: "项目", path: "/projects" },
       { icon: "🎯", name: "OKR 目标", path: "/okrs" },
+      { icon: "📈", name: "数据统计", path: "/stats" },
     ],
   },
   {
@@ -25,7 +27,7 @@ const NAV_GROUPS = [
     items: [
       { icon: "🤖", name: "AI 配置", path: "/settings/ai" },
       { icon: "📢", name: "飞书推送", path: "/settings/feishu" },
-      { icon: "⚙️", name: "设置", path: "/settings", disabled: true },
+      { icon: "⚙️", name: "设置", path: "/settings" },
     ],
   },
 ];
@@ -33,6 +35,7 @@ const NAV_GROUPS = [
 export default function Sidebar() {
   const { logout } = useAuth();
   const { pathname } = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
@@ -84,7 +87,15 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-white/[0.06]">
+      <div className="p-4 border-t border-white/[0.06] flex flex-col gap-1">
+        <button
+          onClick={toggleTheme}
+          title={theme === "dark" ? "切换至浅色主题" : "切换至深色主题"}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-white/40 hover:bg-white/[0.04] hover:text-white/70 transition"
+        >
+          <span className="text-base w-5 text-center">{theme === "dark" ? "☀️" : "🌙"}</span>
+          {theme === "dark" ? "浅色主题" : "深色主题"}
+        </button>
         <button
           onClick={logout}
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-white/40 hover:bg-white/[0.04] hover:text-white/70 transition"

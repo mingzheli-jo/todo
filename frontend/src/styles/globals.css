@@ -2,12 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark theme (default) */
+:root {
+  --color-surface: #0a0a0f;
+  --color-surface-raised: #0f0f18;
+  --color-text-primary: #e4e4e7;
+  --color-text-secondary: rgba(228, 228, 231, 0.6);
+  --color-text-tertiary: rgba(228, 228, 231, 0.25);
+  --color-border: rgba(255, 255, 255, 0.06);
+}
+
+/* Light theme override */
+:root[data-theme="light"] {
+  --color-surface: #f4f4f5;
+  --color-surface-raised: #ffffff;
+  --color-text-primary: #18181b;
+  --color-text-secondary: #52525b;
+  --color-text-tertiary: #a1a1aa;
+  --color-border: rgba(0, 0, 0, 0.08);
+}
+
 body {
   font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: #0a0a0f;
-  color: #e4e4e7;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
 }
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.2); border-radius: 2px; }

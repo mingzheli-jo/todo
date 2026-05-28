@@ -10,6 +10,8 @@ import HabitsPage from "./pages/HabitsPage";
 import PomodoroPage from "./pages/PomodoroPage";
 import SummariesPage from "./pages/SummariesPage";
 import FeishuSettingsPage from "./pages/FeishuSettingsPage";
+import StatsPage from "./pages/StatsPage";
+import SettingsPage from "./pages/SettingsPage";
 import Shell from "./components/layout/Shell";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -37,6 +39,8 @@ export default function App() {
                 <Route path="/pomodoro" element={<PomodoroPage />} />
                 <Route path="/summaries" element={<SummariesPage />} />
                 <Route path="/settings/feishu" element={<FeishuSettingsPage />} />
+                <Route path="/stats" element={<StatsPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
               </Routes>
             </Shell>
           </RequireAuth>
