@@ -1,12 +1,17 @@
 __pycache__/
+**/__pycache__/
 *.pyc
 .env
 *.egg-info/
 dist/
+**/dist/
 build/
 node_modules/
+**/node_modules/
 frontend/dist/
 .venv/
 backups/
+**/.pytest_cache/
+e2e-tests/screenshots/
 .superpowers/
 .omc/
