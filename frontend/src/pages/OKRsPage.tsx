@@ -4,7 +4,26 @@ import { fetchOKRs, createOKR, updateOKR, deleteOKR } from "../api/okrs";
 import Dialog from "../components/ui/Dialog";
 import type { OKR, OKRStatus } from "../types";
 
-const PERIODS = ["2026-Q1", "2026-Q2", "2026-Q3", "2026-Q4", "2026"];
+function generatePeriods(): string[] {
+  const currentYear = new Date().getFullYear();
+  const years = [currentYear + 1, currentYear, currentYear - 1];
+  const result: string[] = [];
+  for (const y of years) {
+    if (y !== currentYear + 1) result.push(`${y}`);
+    for (let q = 4; q >= 1; q--) result.push(`${y}-Q${q}`);
+  }
+  return result;
+}
+
+function currentQuarterPeriod(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const quarter = Math.ceil((now.getMonth() + 1) / 3);
+  return `${year}-Q${quarter}`;
+}
+
+const PERIODS = generatePeriods();
+
 const STATUS_LABEL: Record<OKRStatus, string> = {
   active: "进行中",
   completed: "已完成",
@@ -23,11 +42,11 @@ interface OKRFormData {
   parent_id: string;
 }
 
-const EMPTY_FORM: OKRFormData = { title: "", description: "", period: "2026-Q2", parent_id: "" };
+const EMPTY_FORM: OKRFormData = { title: "", description: "", period: currentQuarterPeriod(), parent_id: "" };
 
 export default function OKRsPage() {
   const qc = useQueryClient();
-  const [selectedPeriod, setSelectedPeriod] = useState("2026-Q2");
+  const [selectedPeriod, setSelectedPeriod] = useState(currentQuarterPeriod);
   const [createType, setCreateType] = useState<"objective" | "key_result" | null>(null);
   const [editOKR, setEditOKR] = useState<OKR | null>(null);
   const [form, setForm] = useState<OKRFormData>(EMPTY_FORM);
