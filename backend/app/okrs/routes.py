@@ -65,6 +65,18 @@ async def create_okr(
     return OKROut.model_validate(okr)
 
 
+@router.get("/tasks/{task_id}/okrs", response_model=list[OKROut])
+async def list_task_okrs(
+    task_id: uuid.UUID,
+    username: str = Depends(get_current_username),
+    db: AsyncSession = Depends(get_db),
+):
+    # Verify user owns the task implicitly via user_id check on OKRs
+    await _get_user_id(username, db)
+    okrs = await service.list_okrs_for_task(db, task_id)
+    return [OKROut.model_validate(o) for o in okrs]
+
+
 @router.get("/{okr_id}", response_model=OKROut)
 async def get_okr(
     okr_id: uuid.UUID,
@@ -133,15 +145,3 @@ async def unlink_task(
     if okr is None:
         raise HTTPException(status_code=404, detail="OKR not found")
     await service.unlink_task_from_okr(db, task_id, okr_id)
-
-
-@router.get("/tasks/{task_id}/okrs", response_model=list[OKROut])
-async def list_task_okrs(
-    task_id: uuid.UUID,
-    username: str = Depends(get_current_username),
-    db: AsyncSession = Depends(get_db),
-):
-    # Verify user owns the task implicitly via user_id check on OKRs
-    await _get_user_id(username, db)
-    okrs = await service.list_okrs_for_task(db, task_id)
-    return [OKROut.model_validate(o) for o in okrs]
