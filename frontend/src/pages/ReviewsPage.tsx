@@ -98,10 +98,12 @@ export default function ReviewsPage() {
   });
 
   const handleBlur = () => {
+    if (saveMutation.isPending) return;
     saveMutation.mutate({ raw_content: content, mood });
   };
 
   const handleMoodSelect = (m: number) => {
+    if (saveMutation.isPending) return;
     const newMood = mood === m ? null : m;
     setMood(newMood);
     if (review) {
@@ -189,7 +191,8 @@ export default function ReviewsPage() {
                     <button
                       key={val}
                       onClick={() => handleMoodSelect(val)}
-                      className={`text-2xl transition-all rounded-lg p-1.5 ${
+                      disabled={saveMutation.isPending}
+                      className={`text-2xl transition-all rounded-lg p-1.5 disabled:cursor-not-allowed ${
                         mood === val
                           ? "bg-brand/20 ring-1 ring-brand scale-110"
                           : "hover:bg-white/[0.05] opacity-50 hover:opacity-100"
@@ -205,7 +208,29 @@ export default function ReviewsPage() {
 
             {/* Content textarea */}
             <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.06]">
-              <div className="text-[10px] font-semibold uppercase tracking-widest text-white/25 mb-3">今日复盘</div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-white/25">今日复盘</div>
+                <div className="flex items-center gap-2">
+                  {saveMutation.isPending ? (
+                    <span className="flex items-center gap-1 text-xs text-white/30">
+                      <span className="inline-block w-3 h-3 border-2 border-white/20 border-t-white/50 rounded-full animate-spin" />
+                      保存中...
+                    </span>
+                  ) : saveMutation.isError ? (
+                    <span className="text-xs text-red-400">✕ 保存失败</span>
+                  ) : saveMutation.isSuccess ? (
+                    <span className="text-xs text-white/30">✓ 已保存</span>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => { if (!saveMutation.isPending) saveMutation.mutate({ raw_content: content, mood }); }}
+                    disabled={saveMutation.isPending}
+                    className="px-2.5 py-1 rounded-md bg-white/[0.06] hover:bg-white/[0.10] text-white/50 hover:text-white/80 text-xs transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    保存
+                  </button>
+                </div>
+              </div>
               <textarea
                 value={content}
                 onChange={e => setContent(e.target.value)}
