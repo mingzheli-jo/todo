@@ -16,4 +16,4 @@ RUN chmod +x /entrypoint.sh
 ENV PYTHONPATH=/app
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["celery", "-A", "app.tasks.celery_app", "worker", "--loglevel=info"]
+CMD ["celery", "-A", "app.celery_tasks.celery_app", "worker", "--loglevel=info"]

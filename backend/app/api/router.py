@@ -8,6 +8,8 @@ from app.reviews.routes import router as reviews_router
 from app.okrs.routes import router as okrs_router
 from app.habits.routes import router as habits_router
 from app.pomodoro.routes import router as pomodoro_router
+from app.summaries.routes import router as summaries_router
+from app.feishu.routes import router as feishu_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
@@ -19,3 +21,5 @@ api_router.include_router(reviews_router, prefix="/reviews", tags=["reviews"])
 api_router.include_router(okrs_router, prefix="/okrs", tags=["okrs"])
 api_router.include_router(habits_router, prefix="/habits", tags=["habits"])
 api_router.include_router(pomodoro_router, prefix="/pomodoro", tags=["pomodoro"])
+api_router.include_router(summaries_router, prefix="/summaries", tags=["summaries"])
+api_router.include_router(feishu_router, prefix="/feishu", tags=["feishu"])

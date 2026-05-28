@@ -151,3 +151,61 @@ export interface PomodoroTodayStats {
   total_minutes: number;
   current_session: PomodoroSession | null;
 }
+
+// Summary types
+export type SummaryType = "weekly" | "monthly";
+
+export interface SummaryMetrics {
+  tasks?: {
+    completed_total: number;
+    completed_by_quadrant: Record<string, number>;
+    completed_by_project: Array<{ project_id: string | null; count: number }>;
+  };
+  reviews?: {
+    count: number;
+    ai_structured_aggregated: Array<Record<string, unknown>>;
+  };
+  habits?: {
+    completion_rate: number;
+    best_streak_habit: string | null;
+    total_check_ins: number;
+  };
+  pomodoro?: {
+    total_sessions: number;
+    completed_sessions: number;
+    total_minutes: number;
+  };
+  okrs?: {
+    avg_progress: number;
+    completed_count: number;
+  };
+}
+
+export interface AISummary {
+  id: string;
+  user_id: string;
+  type: SummaryType;
+  period_start: string;
+  period_end: string;
+  content: string;
+  metrics: SummaryMetrics | null;
+  pushed_feishu: boolean;
+  created_at: string;
+}
+
+// Feishu types
+export interface FeishuConfigOut {
+  has_webhook: boolean;
+  push_weekly: boolean;
+  push_monthly: boolean;
+  push_hour: number;
+  enabled: boolean;
+}
+
+export interface FeishuConfigUpdate {
+  webhook_url?: string;
+  push_weekly?: boolean;
+  push_monthly?: boolean;
+  push_hour?: number;
+  enabled?: boolean;
+}

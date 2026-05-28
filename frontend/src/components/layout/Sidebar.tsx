@@ -15,7 +15,7 @@ const NAV_GROUPS = [
     label: "个人成长",
     items: [
       { icon: "📝", name: "每日复盘", path: "/reviews" },
-      { icon: "📊", name: "周/月汇总", path: "/summaries", disabled: true },
+      { icon: "📊", name: "周/月汇总", path: "/summaries" },
       { icon: "🔥", name: "习惯打卡", path: "/habits" },
       { icon: "🍅", name: "番茄钟", path: "/pomodoro" },
     ],
@@ -24,7 +24,7 @@ const NAV_GROUPS = [
     label: "系统",
     items: [
       { icon: "🤖", name: "AI 配置", path: "/settings/ai" },
-      { icon: "📢", name: "飞书推送", path: "/settings/feishu", disabled: true },
+      { icon: "📢", name: "飞书推送", path: "/settings/feishu" },
       { icon: "⚙️", name: "设置", path: "/settings", disabled: true },
     ],
   },

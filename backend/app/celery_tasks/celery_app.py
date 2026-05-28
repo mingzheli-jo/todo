@@ -9,7 +9,7 @@ def make_celery() -> Celery:
         "toto",
         broker=settings.redis_url,
         backend=settings.redis_url,
-        include=["app.celery_tasks.ai_tasks"],
+        include=["app.celery_tasks.ai_tasks", "app.celery_tasks.summary_tasks"],
     )
     app.conf.update(
         task_serializer="json",
@@ -18,6 +18,8 @@ def make_celery() -> Celery:
         timezone="UTC",
         enable_utc=True,
     )
+    from app.celery_tasks.beat_schedule import beat_schedule
+    app.conf.beat_schedule = beat_schedule
     return app
 
 
