@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Dialog from "../ui/Dialog";
 import { createTask, updateTask, deleteTask } from "../../api/tasks";
+import { fetchProjects } from "../../api/projects";
 import type { Task, Quadrant } from "../../types";
 
 interface Props {
@@ -17,7 +18,14 @@ export default function TaskDialog({ open, onClose, editTask, defaultQuadrant }:
   const [description, setDescription] = useState("");
   const [quadrant, setQuadrant] = useState<Quadrant>(defaultQuadrant ?? "neither");
   const [dueDate, setDueDate] = useState("");
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects", false],
+    queryFn: () => fetchProjects(false),
+    enabled: open,
+  });
 
   useEffect(() => {
     if (editTask) {
@@ -25,11 +33,13 @@ export default function TaskDialog({ open, onClose, editTask, defaultQuadrant }:
       setDescription(editTask.description ?? "");
       setQuadrant(editTask.quadrant);
       setDueDate(editTask.due_date ?? "");
+      setProjectId(editTask.project_id ?? null);
     } else {
       setTitle("");
       setDescription("");
       setQuadrant(defaultQuadrant ?? "neither");
       setDueDate("");
+      setProjectId(null);
     }
   }, [editTask, defaultQuadrant, open]);
 
@@ -44,6 +54,7 @@ export default function TaskDialog({ open, onClose, editTask, defaultQuadrant }:
           description: description || undefined,
           quadrant,
           due_date: dueDate || undefined,
+          project_id: projectId,
         });
       } else {
         await createTask({
@@ -51,6 +62,7 @@ export default function TaskDialog({ open, onClose, editTask, defaultQuadrant }:
           description: description || undefined,
           quadrant,
           due_date: dueDate || undefined,
+          project_id: projectId,
         });
       }
       qc.invalidateQueries({ queryKey: ["tasks"] });
@@ -108,6 +120,21 @@ export default function TaskDialog({ open, onClose, editTask, defaultQuadrant }:
               </button>
             ))}
           </div>
+        </div>
+        <div>
+          <label className="text-xs text-white/40 mb-2 block">所属项目</label>
+          <select
+            value={projectId ?? ""}
+            onChange={(e) => setProjectId(e.target.value || null)}
+            className="w-full px-3 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm focus:outline-none focus:border-brand/50 text-white/80"
+          >
+            <option value="">（无）</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.icon} {p.name}
+              </option>
+            ))}
+          </select>
         </div>
         <input
           type="date"

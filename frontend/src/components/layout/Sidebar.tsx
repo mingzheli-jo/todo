@@ -7,7 +7,7 @@ const NAV_GROUPS = [
     items: [
       { icon: "📋", name: "任务看板", path: "/" },
       { icon: "📅", name: "时间线", path: "/timeline", disabled: true },
-      { icon: "📁", name: "项目", path: "/projects", disabled: true },
+      { icon: "📁", name: "项目", path: "/projects" },
       { icon: "🎯", name: "OKR 目标", path: "/okrs", disabled: true },
     ],
   },

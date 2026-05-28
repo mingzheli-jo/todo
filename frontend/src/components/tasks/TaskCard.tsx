@@ -1,6 +1,7 @@
 import type { Task } from "../../types";
 import { updateTask } from "../../api/tasks";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchProjects } from "../../api/projects";
 
 interface TaskCardProps {
   task: Task;
@@ -10,6 +11,14 @@ interface TaskCardProps {
 export default function TaskCard({ task, onEdit }: TaskCardProps) {
   const qc = useQueryClient();
   const isDone = task.status === "done";
+
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects", false],
+    queryFn: () => fetchProjects(false),
+    staleTime: 30_000,
+  });
+
+  const project = task.project_id ? projects.find((p) => p.id === task.project_id) : null;
 
   const toggleDone = async () => {
     await updateTask(task.id, { status: isDone ? "todo" : "done" });
@@ -31,9 +40,14 @@ export default function TaskCard({ task, onEdit }: TaskCardProps) {
             isDone ? "bg-emerald-500 border-emerald-500" : "border-white/20 hover:border-white/40"
           }`}
         />
-        <span className={`text-[13px] font-medium ${isDone ? "line-through opacity-40" : ""}`}>
+        <span className={`text-[13px] font-medium flex-1 ${isDone ? "line-through opacity-40" : ""}`}>
           {task.title}
         </span>
+        {project && (
+          <span className="text-sm leading-none flex-shrink-0" title={project.name}>
+            {project.icon}
+          </span>
+        )}
       </div>
       {task.due_date && (
         <div className="ml-6 mt-1">
