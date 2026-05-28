@@ -7,7 +7,6 @@ const NAV_GROUPS = [
     label: "工作台",
     items: [
       { icon: "📋", name: "任务看板", path: "/" },
-      { icon: "📅", name: "时间线", path: "/timeline", disabled: true },
       { icon: "📁", name: "项目", path: "/projects" },
       { icon: "🎯", name: "OKR 目标", path: "/okrs" },
       { icon: "📈", name: "数据统计", path: "/stats" },
@@ -60,21 +59,12 @@ export default function Sidebar() {
               {group.label}
             </div>
             {group.items.map((item) => {
-              const active = !item.disabled && isActive(item.path);
-              const className = `flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition ${
+              const active = isActive(item.path);
+              const className = `flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition cursor-pointer ${
                 active
                   ? "bg-gradient-to-r from-brand/15 to-brand-light/10 text-purple-300 font-medium"
                   : "text-white/40 hover:bg-white/[0.04] hover:text-white/70"
-              } ${item.disabled ? "opacity-40 cursor-not-allowed pointer-events-none" : "cursor-pointer"}`;
-
-              if (item.disabled) {
-                return (
-                  <span key={item.path} className={className}>
-                    <span className="text-base w-5 text-center">{item.icon}</span>
-                    {item.name}
-                  </span>
-                );
-              }
+              }`;
 
               return (
                 <Link key={item.path} to={item.path} className={className}>
