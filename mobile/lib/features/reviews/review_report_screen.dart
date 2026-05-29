@@ -10,6 +10,7 @@ class ReviewReportScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviews = ref.watch(pastReviewsProvider);
+    final selectedDays = ref.watch(reviewRangeProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('复盘报表')),
       body: reviews.when(
@@ -21,6 +22,25 @@ class ReviewReportScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [7, 30, 90].map((days) {
+                  final isSelected = selectedDays == days;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: isSelected
+                        ? FilledButton(
+                            onPressed: () => ref.read(reviewRangeProvider.notifier).state = days,
+                            child: Text('近$days天'),
+                          )
+                        : OutlinedButton(
+                            onPressed: () => ref.read(reviewRangeProvider.notifier).state = days,
+                            child: Text('近$days天'),
+                          ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
               Text('心情趋势', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
               SizedBox(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:toto/features/memos/memo_models.dart';
 import 'package:toto/features/memos/memo_provider.dart';
+import 'package:toto/features/tasks/task_provider.dart';
 
 class MemosScreen extends ConsumerWidget {
   const MemosScreen({super.key});
@@ -86,6 +87,7 @@ class MemosScreen extends ConsumerWidget {
                               onPressed: () async {
                                 await ref.read(memoRepositoryProvider).convert(m.id);
                                 ref.invalidate(memoListProvider);
+                                await ref.read(tasksProvider.notifier).load();
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(content: Text('已转为任务')),

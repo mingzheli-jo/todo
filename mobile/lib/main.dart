@@ -45,7 +45,8 @@ class _TotoAppState extends ConsumerState<TotoApp> {
 
   void _handleUri(Uri? uri) {
     if (uri == null) return;
-    final type = uri.host == 'task' ? 'task' : 'memo';
+    if (uri.host != 'task' && uri.host != 'memo') return;
+    final type = uri.host;
     final authState = ref.read(authProvider);
     if (authState is AuthAuthenticated) {
       // 已登录：立即导航

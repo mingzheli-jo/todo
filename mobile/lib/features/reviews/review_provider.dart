@@ -139,10 +139,13 @@ final todayReviewProvider =
   return TodayReviewNotifier(ref.watch(reviewRepositoryProvider));
 });
 
+final reviewRangeProvider = StateProvider<int>((ref) => 30);
+
 final pastReviewsProvider = FutureProvider<List<Review>>((ref) async {
   final repo = ref.watch(reviewRepositoryProvider);
+  final days = ref.watch(reviewRangeProvider);
   final now = DateTime.now();
   final start = DateTime(now.year, now.month, now.day)
-      .subtract(const Duration(days: 30));
+      .subtract(Duration(days: days));
   return repo.list(startDate: start, endDate: now);
 });
