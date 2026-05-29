@@ -30,6 +30,7 @@ import app.habits.models  # noqa: F401
 import app.pomodoro.models  # noqa: F401
 import app.summaries.models  # noqa: F401
 import app.feishu.models  # noqa: F401
+import app.memos.models  # noqa: F401
 
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
