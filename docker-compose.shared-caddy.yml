@@ -1,0 +1,93 @@
+# Production overlay for "shared edge" mode.
+#
+# Use this overlay (INSTEAD of docker-compose.prod.yml) when an upstream
+# Caddy / Nginx / Traefik already owns ports 80/443 on the host and you
+# want it to reverse-proxy traffic into our web container.
+#
+# Pre-req on the host (one-time):
+#
+#   docker network create web_proxy
+#   docker network connect web_proxy <upstream-caddy-container>
+#
+# Bring up the stack:
+#
+#   docker compose -f docker-compose.yml \
+#                  -f docker-compose.shared-caddy.yml up -d
+#
+# Then add a vhost to the upstream caddy that reverse-proxies
+# https://your-domain to todo-web-1:80 (or whatever the web container is
+# named — `docker compose ps web` to check). Reload caddy:
+#
+#   docker exec <upstream-caddy-container> caddy reload \
+#       --config /etc/caddy/Caddyfile
+#
+# Compared with docker-compose.prod.yml this overlay:
+#   - omits the bundled caddy service (no host port grab on 80/443)
+#   - keeps every other prod-hardening tweak (restart policy, healthcheck,
+#     log rotation, internal-only ports)
+#   - declares the external web_proxy network so the upstream caddy can
+#     reach `todo-web-1:80` by container name.
+
+services:
+  api:
+    restart: unless-stopped
+    ports: !reset []
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    restart: unless-stopped
+    ports: !reset []
+    networks:
+      - default
+      - web_proxy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres:
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  worker:
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  beat:
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  web_proxy:
+    external: true

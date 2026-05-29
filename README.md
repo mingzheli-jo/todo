@@ -127,12 +127,33 @@ git clone <repo> toto && cd toto
 - 跑 `alembic upgrade head` 初始化数据库
 - 等 Caddy 拿到 Let's Encrypt 证书
 
+### 同一台机器跑多个项目（共享 Caddy）
+
+如果服务器上已经有另一个项目占用了 80/443（比如另一个 Caddy/Nginx），toto 改用 **shared-edge** 模式：让上游入口反代到 toto 的 web 容器。
+
+服务器一次性配置（把上游 caddy 接入共享网络）：
+
+```bash
+docker network create web_proxy
+docker network connect web_proxy <上游 caddy 容器名>
+```
+
+部署时带 `SHARED_CADDY=1`：
+
+```bash
+SHARED_CADDY=1 ./bootstrap.sh         # 首次
+SHARED_CADDY=1 ./deploy.sh            # 更新
+```
+
+最后在上游 Caddyfile 加一段把 `https://${DOMAIN}` 反代到 `todo-web-1:80`，`caddy reload` 就行。
+
 ### 升级 / 重新部署
 
 代码更新后：
 
 ```bash
-./deploy.sh      # 拉新代码、重建镜像、滚动重启
+./deploy.sh                  # 自有 caddy 模式
+SHARED_CADDY=1 ./deploy.sh   # 共享 caddy 模式
 ```
 
 详见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)

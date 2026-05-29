@@ -27,6 +27,29 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # ---------------------------------------------------------------------------
+# Compose-file selection
+#
+# Default (own edge):
+#     docker-compose.yml + docker-compose.prod.yml  → toto runs its own caddy
+#     on 80/443.
+#
+# Shared edge (SHARED_CADDY=1):
+#     docker-compose.yml + docker-compose.shared-caddy.yml → toto does NOT
+#     bind 80/443; an upstream caddy on the host proxies into todo-web.
+#     The host must have a docker network named `web_proxy` with the
+#     upstream caddy attached. See docker-compose.shared-caddy.yml header
+#     for the one-time setup steps.
+# ---------------------------------------------------------------------------
+if [ "${SHARED_CADDY:-0}" = "1" ]; then
+    COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.shared-caddy.yml)
+    EDGE_MODE="shared"
+else
+    COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.prod.yml)
+    EDGE_MODE="own"
+fi
+dc() { docker compose "${COMPOSE_FILES[@]}" "$@"; }
+
+# ---------------------------------------------------------------------------
 # Colors / logging
 # ---------------------------------------------------------------------------
 RED=$'\e[31m'; GREEN=$'\e[32m'; YELLOW=$'\e[33m'; BLUE=$'\e[36m'; RESET=$'\e[0m'
@@ -50,21 +73,30 @@ if ! docker info >/dev/null 2>&1; then
     fail "Cannot talk to Docker daemon. Is the service running? Try: sudo systemctl start docker"
 fi
 
-# Ports 80/443 must be free (Caddy needs them) unless the existing listener
-# is our own caddy container.
-for port in 80 443; do
-    if ss -tlnH 2>/dev/null | awk '{print $4}' | grep -qE "[:.]${port}$"; then
-        # Allow if the listener already belongs to our compose stack
-        if docker compose ps --services 2>/dev/null | grep -q '^caddy$' \
-            && docker compose ps caddy 2>/dev/null | grep -q "Up"; then
-            ok "Port $port already held by our caddy container — fine"
-        else
-            warn "Port $port is in use by another process. Caddy will fail to bind."
+if [ "$EDGE_MODE" = "own" ]; then
+    # Own-edge mode: Caddy needs 80/443 free.
+    for port in 80 443; do
+        if ss -tlnH 2>/dev/null | awk '{print $4}' | grep -qE "[:.]${port}$"; then
+            # Allow if the listener already belongs to our compose stack
+            if dc ps --services 2>/dev/null | grep -q '^caddy$' \
+                && dc ps caddy 2>/dev/null | grep -q "Up"; then
+                ok "Port $port already held by our caddy container — fine"
+            else
+                warn "Port $port is in use by another process. Caddy will fail to bind."
+                warn "Tip: an upstream proxy on this host? Re-run with SHARED_CADDY=1 ./bootstrap.sh"
+            fi
         fi
+    done
+else
+    # Shared-edge mode: an upstream caddy owns 80/443; we just need the
+    # web_proxy network to exist so our web container can join it.
+    if ! docker network inspect web_proxy >/dev/null 2>&1; then
+        fail "SHARED_CADDY=1 but docker network 'web_proxy' does not exist.\nCreate it and attach your upstream caddy first:\n  docker network create web_proxy\n  docker network connect web_proxy <upstream-caddy-container>"
     fi
-done
+    ok "Shared edge: web_proxy network present"
+fi
 
-ok "Docker $(docker version --format '{{.Server.Version}}' 2>/dev/null) ready"
+ok "Docker $(docker version --format '{{.Server.Version}}' 2>/dev/null) ready (edge mode: $EDGE_MODE)"
 
 # ---------------------------------------------------------------------------
 # 2. .env: generate if missing
@@ -181,7 +213,7 @@ fi
 # 4. Build images
 # ---------------------------------------------------------------------------
 step "Building images (this is the slow step on a fresh host)"
-docker compose -f docker-compose.yml -f docker-compose.prod.yml build
+dc build
 
 # ---------------------------------------------------------------------------
 # 5. Hash admin password if needed (use api image's bcrypt)
@@ -189,7 +221,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml build
 if [ "$NEEDS_HASH" = true ]; then
     step "Hashing admin password with bcrypt (inside api container)"
     HASH=$(printf '%s' "$ADMIN_PASSWORD" \
-        | docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm -T api \
+        | dc run --rm -T api \
               python -c 'import sys, bcrypt; sys.stdout.write(bcrypt.hashpw(sys.stdin.read().encode(), bcrypt.gensalt(rounds=12)).decode())' \
         | tr -d '\r')
     if [ -z "$HASH" ] || [[ "$HASH" != \$2* ]]; then
@@ -207,21 +239,21 @@ fi
 # 6. Start stack
 # ---------------------------------------------------------------------------
 step "Starting stack"
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --remove-orphans
+dc up -d --remove-orphans
 
 # ---------------------------------------------------------------------------
 # 7. Wait for api health
 # ---------------------------------------------------------------------------
 step "Waiting for api to become healthy"
 for i in $(seq 1 60); do
-    if docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T api \
+    if dc exec -T api \
             curl -fsS http://localhost:8000/health >/dev/null 2>&1; then
         ok "api healthy after ${i}s"
         break
     fi
     if [ "$i" -eq 60 ]; then
         warn "api still not healthy after 60s. Showing last 50 lines:"
-        docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=50 api
+        dc logs --tail=50 api
         fail "Bootstrap aborted — investigate the api container."
     fi
     sleep 1
@@ -231,13 +263,13 @@ done
 # 8. Migrations
 # ---------------------------------------------------------------------------
 step "Running database migrations (alembic upgrade head)"
-docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T api alembic upgrade head
+dc exec -T api alembic upgrade head
 
 # ---------------------------------------------------------------------------
 # 9. Smoke test
 # ---------------------------------------------------------------------------
 step "Smoke-testing the auth endpoint"
-HTTP=$(docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T api \
+HTTP=$(dc exec -T api \
     curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/api/auth/login \
         -H 'Content-Type: application/json' \
         -d "{\"username\":\"${ADMIN_USERNAME}\",\"password\":\"__wrong__\"}" \
@@ -250,37 +282,47 @@ case "$HTTP" in
 esac
 
 # ---------------------------------------------------------------------------
-# 10. Wait for Caddy / cert
+# 10. Wait for Caddy / cert (own-edge mode only)
 # ---------------------------------------------------------------------------
-step "Waiting up to 60s for Caddy to obtain a certificate"
-CERT_OK=false
-for i in $(seq 1 30); do
-    if curl -fsS --max-time 5 "https://${DOMAIN}/health" >/dev/null 2>&1; then
-        CERT_OK=true
-        ok "HTTPS endpoint live at https://${DOMAIN}"
-        break
+if [ "$EDGE_MODE" = "own" ]; then
+    step "Waiting up to 60s for Caddy to obtain a certificate"
+    CERT_OK=false
+    for i in $(seq 1 30); do
+        if curl -fsS --max-time 5 "https://${DOMAIN}/health" >/dev/null 2>&1; then
+            CERT_OK=true
+            ok "HTTPS endpoint live at https://${DOMAIN}"
+            break
+        fi
+        sleep 2
+    done
+    if [ "$CERT_OK" = false ]; then
+        warn "https://${DOMAIN}/health did not respond in 60s. Possible causes:"
+        warn "  • DNS not pointing here yet (Let's Encrypt will retry)"
+        warn "  • Port 80/443 blocked by firewall"
+        warn "  • Caddy still issuing — tail logs: docker compose logs -f caddy"
     fi
-    sleep 2
-done
-if [ "$CERT_OK" = false ]; then
-    warn "https://${DOMAIN}/health did not respond in 60s. Possible causes:"
-    warn "  • DNS not pointing here yet (Let's Encrypt will retry)"
-    warn "  • Port 80/443 blocked by firewall"
-    warn "  • Caddy still issuing — tail logs: docker compose logs -f caddy"
+else
+    step "Shared-edge mode: skipping local Caddy probe"
+    ok "Configure the upstream caddy to reverse_proxy https://${DOMAIN} to todo-web-1:80"
 fi
 
 # ---------------------------------------------------------------------------
 # Done
 # ---------------------------------------------------------------------------
 echo
-docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+dc ps
 echo
 ok "Bootstrap complete."
 echo
 echo "  URL:      https://${DOMAIN}"
 echo "  Admin:    ${ADMIN_USERNAME}"
+echo "  Edge:     $EDGE_MODE"
 echo
 echo "Next steps:"
+if [ "$EDGE_MODE" = "shared" ]; then
+    echo "  • Add an upstream vhost reverse-proxying https://${DOMAIN} to"
+    echo "    todo-web-1:80, then reload the upstream caddy."
+fi
 echo "  • Log in and configure an AI provider (Settings → AI 配置)."
 echo "  • Set up backups: see backup.sh and DEPLOYMENT.md."
-echo "  • For updates: ./deploy.sh"
+echo "  • For updates: ./deploy.sh   (set SHARED_CADDY=1 if applicable)"
