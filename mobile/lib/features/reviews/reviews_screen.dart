@@ -44,7 +44,7 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
           IconButton(
             tooltip: '复盘报表',
             icon: const Icon(Icons.insights_outlined),
-            onPressed: () => context.go('/review-report'),
+            onPressed: () => context.push('/review-report'),
           ),
         ],
       ),
@@ -152,8 +152,6 @@ class _MoodSelector extends StatelessWidget {
   final int? mood;
   final ValueChanged<int> onChanged;
 
-  static const _emojis = ['😢', '🙁', '😐', '🙂', '😄'];
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -181,7 +179,7 @@ class _MoodSelector extends StatelessWidget {
                     : Colors.transparent,
                 shape: BoxShape.circle,
               ),
-              child: Text(_emojis[i], style: const TextStyle(fontSize: 22)),
+              child: Text(moodEmojis[i], style: const TextStyle(fontSize: 22)),
             ),
           ),
           if (i != 4) const SizedBox(width: 4),

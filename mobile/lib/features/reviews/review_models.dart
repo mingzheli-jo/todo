@@ -1,3 +1,7 @@
+/// Shared mood emoji list used across the reviews feature.
+/// Index 0 = mood 1 (worst) … index 4 = mood 5 (best).
+const moodEmojis = ['😢', '🙁', '😐', '🙂', '😄'];
+
 class Review {
   const Review({
     required this.id,

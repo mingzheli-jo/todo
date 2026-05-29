@@ -4,8 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:toto/features/reviews/review_models.dart';
 import 'package:toto/features/reviews/review_provider.dart';
 
-const _moodEmojis = ['😢', '😕', '😐', '🙂', '😄'];
-
 class ReviewReportScreen extends ConsumerWidget {
   const ReviewReportScreen({super.key});
 
@@ -37,7 +35,7 @@ class ReviewReportScreen extends ConsumerWidget {
               ...sorted.map((r) => Card(
                     child: ListTile(
                       leading: Text(
-                        r.mood == null ? '·' : _moodEmojis[r.mood! - 1],
+                        r.mood == null ? '·' : moodEmojis[r.mood! - 1],
                         style: const TextStyle(fontSize: 22),
                       ),
                       title: Text(DateFormat('yyyy-MM-dd').format(r.date)),
@@ -88,7 +86,8 @@ class _MoodTrendPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _MoodTrendPainter old) => old.reviews != reviews;
+  // Always repaint — the painter receives a freshly-built list each time.
+  bool shouldRepaint(covariant _MoodTrendPainter old) => true;
 }
 
 class _ReviewDetailScreen extends StatelessWidget {
@@ -103,7 +102,7 @@ class _ReviewDetailScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           if (review.mood != null)
-            Text('心情：${_moodEmojis[review.mood! - 1]}', style: const TextStyle(fontSize: 18)),
+            Text('心情：${moodEmojis[review.mood! - 1]}', style: const TextStyle(fontSize: 18)),
           const SizedBox(height: 12),
           Text('原始复盘', style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 4),
