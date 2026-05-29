@@ -64,8 +64,8 @@ class RootShell extends StatelessWidget {
     }
   }
 
-  void _showQuickAdd(BuildContext context) {
-    showModalBottomSheet(
+  void _showQuickAdd(BuildContext context) async {
+    final choice = await showModalBottomSheet<String>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -77,23 +77,23 @@ class RootShell extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.task_alt_rounded),
               title: const Text('新建任务'),
-              onTap: () {
-                Navigator.of(context).pop();
-                _openTaskForm(context);
-              },
+              onTap: () => Navigator.of(context).pop('task'),
             ),
             ListTile(
               leading: const Icon(Icons.note_add_rounded),
               title: const Text('新建备忘'),
-              onTap: () {
-                Navigator.of(context).pop();
-                _openMemoSheet(context);
-              },
+              onTap: () => Navigator.of(context).pop('memo'),
             ),
           ],
         ),
       ),
     );
+    if (!context.mounted) return;
+    if (choice == 'task') {
+      _openTaskForm(context);
+    } else if (choice == 'memo') {
+      _openMemoSheet(context);
+    }
   }
 
   void _openTaskForm(BuildContext context) {

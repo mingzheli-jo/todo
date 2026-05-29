@@ -10,7 +10,6 @@ class MemosScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(memoFilterProvider);
     final memos = ref.watch(memoListProvider);
-    final repo = ref.read(memoRepositoryProvider);
 
     Future<void> refresh() async => ref.invalidate(memoListProvider);
 
@@ -53,15 +52,24 @@ class MemosScreen extends ConsumerWidget {
                     child: const Icon(Icons.delete_outline),
                   ),
                   onDismissed: (_) async {
-                    await repo.delete(m.id);
-                    ref.invalidate(memoListProvider);
+                    try {
+                      await ref.read(memoRepositoryProvider).delete(m.id);
+                      ref.invalidate(memoListProvider);
+                    } catch (_) {
+                      ref.invalidate(memoListProvider);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('删除失败，请重试')),
+                        );
+                      }
+                    }
                   },
                   child: Card(
                     child: ListTile(
                       leading: Checkbox(
                         value: m.isDone,
                         onChanged: (_) async {
-                          await repo.setDone(m.id, !m.isDone);
+                          await ref.read(memoRepositoryProvider).setDone(m.id, !m.isDone);
                           ref.invalidate(memoListProvider);
                         },
                       ),
@@ -76,7 +84,7 @@ class MemosScreen extends ConsumerWidget {
                           ? null
                           : TextButton(
                               onPressed: () async {
-                                await repo.convert(m.id);
+                                await ref.read(memoRepositoryProvider).convert(m.id);
                                 ref.invalidate(memoListProvider);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(

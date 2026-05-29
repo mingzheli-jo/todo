@@ -27,7 +27,7 @@ class _MemoQuickAddSheetState extends ConsumerState<MemoQuickAddSheet> {
       await ref.read(memoRepositoryProvider).create(text);
       ref.invalidate(memoListProvider);
       if (mounted) Navigator.of(context).pop(true);
-    } catch (_) {
+    } on Object catch (_) {
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存失败，请重试')));
@@ -39,7 +39,7 @@ class _MemoQuickAddSheetState extends ConsumerState<MemoQuickAddSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+        bottom: MediaQuery.viewInsetsOf(context).bottom,
         left: 16, right: 16, top: 16,
       ),
       child: Column(

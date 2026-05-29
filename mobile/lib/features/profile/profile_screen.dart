@@ -68,7 +68,7 @@ class ProfileScreen extends ConsumerWidget {
                 _ProfileTile(
                   icon: Icons.sticky_note_2_outlined,
                   label: '速记收集箱',
-                  onTap: () => context.go('/memos'),
+                  onTap: () => context.push('/memos'),
                 ),
                 const Divider(height: 1, indent: 56),
                 _ProfileTile(
