@@ -11,6 +11,7 @@ import 'package:toto/features/pomodoro/pomodoro_screen.dart';
 import 'package:toto/features/profile/profile_screen.dart';
 import 'package:toto/features/projects/projects_screen.dart';
 import 'package:toto/features/quick_capture/quick_capture_screen.dart';
+import 'package:toto/features/reviews/review_report_screen.dart';
 import 'package:toto/features/reviews/reviews_screen.dart';
 import 'package:toto/features/settings/settings_screen.dart';
 import 'package:toto/features/tasks/tasks_screen.dart';
@@ -85,6 +86,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/memos',
             builder: (_, __) => const MemosScreen(),
+          ),
+          GoRoute(
+            path: '/review-report',
+            builder: (_, __) => const ReviewReportScreen(),
           ),
           GoRoute(
             path: '/profile',

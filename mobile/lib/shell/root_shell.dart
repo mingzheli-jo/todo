@@ -130,7 +130,8 @@ class RootShell extends StatelessWidget {
         location == '/okrs' ||
         location == '/projects' ||
         location == '/settings' ||
-        location == '/memos') {
+        location == '/memos' ||
+        location == '/review-report') {
       return 4;
     }
     return 0; // '/' → home
