@@ -12,6 +12,7 @@ import SummariesPage from "./pages/SummariesPage";
 import FeishuSettingsPage from "./pages/FeishuSettingsPage";
 import StatsPage from "./pages/StatsPage";
 import SettingsPage from "./pages/SettingsPage";
+import MemoboxPage from "./pages/MemoboxPage";
 import Shell from "./components/layout/Shell";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -41,6 +42,7 @@ export default function App() {
                 <Route path="/settings/feishu" element={<FeishuSettingsPage />} />
                 <Route path="/stats" element={<StatsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/memos" element={<MemoboxPage />} />
               </Routes>
             </Shell>
           </RequireAuth>

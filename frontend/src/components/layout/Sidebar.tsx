@@ -15,6 +15,7 @@ const NAV_GROUPS = [
   {
     label: "个人成长",
     items: [
+      { icon: "🗒️", name: "速记收集箱", path: "/memos" },
       { icon: "📝", name: "每日复盘", path: "/reviews" },
       { icon: "📊", name: "周/月汇总", path: "/summaries" },
       { icon: "🔥", name: "习惯打卡", path: "/habits" },
