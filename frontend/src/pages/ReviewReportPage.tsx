@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchReviews } from "../api/reviews";
 import type { DailyReview } from "../types";
 
-const MOOD_EMOJIS = ["😢", "😕", "😐", "🙂", "😄"];
+const MOOD_EMOJIS = ["😢", "🙁", "😐", "🙂", "😄"];
 
 function daysAgo(n: number): string {
   const d = new Date();

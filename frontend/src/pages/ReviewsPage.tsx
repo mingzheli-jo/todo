@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchTodayReview, triggerAIProcess, fetchAIStatus, upsertReview, updateReview } from "../api/reviews";
 import type { AIStatus, DailyReview } from "../types";
 
-const MOOD_EMOJIS = ["😢", "😕", "😐", "🙂", "😄"];
+const MOOD_EMOJIS = ["😢", "🙁", "😐", "🙂", "😄"];
 
 function formatDate(d: Date): string {
   const y = d.getFullYear();
