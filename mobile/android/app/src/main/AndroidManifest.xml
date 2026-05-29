@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for network access in release builds (debug/profile manifests
+         add this automatically, but release merges only this main manifest). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Toto"
         android:name="${applicationName}"
