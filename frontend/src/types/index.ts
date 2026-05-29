@@ -231,3 +231,16 @@ export interface FeishuConfigUpdate {
   push_hour?: number;
   enabled?: boolean;
 }
+
+export interface Memo {
+  id: string;
+  user_id: string;
+  content: string;
+  is_done: boolean;
+  done_at: string | null;
+  task_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type MemoStatusFilter = "open" | "done" | "all";
