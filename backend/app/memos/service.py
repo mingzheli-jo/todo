@@ -38,9 +38,9 @@ async def update_memo(db: AsyncSession, memo: Memo, data: MemoUpdate) -> Memo:
     update_data = data.model_dump(exclude_unset=True)
     if "is_done" in update_data:
         if update_data["is_done"] and memo.done_at is None:
-            memo.done_at = datetime.now(timezone.utc)
+            update_data["done_at"] = datetime.now(timezone.utc)
         elif not update_data["is_done"]:
-            memo.done_at = None
+            update_data["done_at"] = None
     for key, value in update_data.items():
         setattr(memo, key, value)
     await db.commit()
