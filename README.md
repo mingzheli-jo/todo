@@ -156,6 +156,17 @@ SHARED_CADDY=1 ./deploy.sh            # 更新
 SHARED_CADDY=1 ./deploy.sh   # 共享 caddy 模式
 ```
 
+### 忘记 / 重置管理员密码
+
+任何原因（bootstrap 失败、忘记密码）导致登录失败时，**栈在跑**的状态下：
+
+```bash
+./tool/reset_admin_password.sh        # 用 .env 里的 ADMIN_USERNAME
+./tool/reset_admin_password.sh alice  # 显式指定用户名
+```
+
+脚本会让你静默输入新密码 + 二次确认，然后直接更新数据库里的 bcrypt 哈希。
+
 详见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ## 备份与恢复

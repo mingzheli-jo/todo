@@ -219,18 +219,33 @@ dc build
 # 5. Hash admin password if needed (use api image's bcrypt)
 # ---------------------------------------------------------------------------
 if [ "$NEEDS_HASH" = true ]; then
-    step "Hashing admin password with bcrypt (inside api container)"
+    step "Hashing admin password with bcrypt (inside api image)"
+    # IMPORTANT: bypass the entrypoint with --entrypoint python. The api
+    # entrypoint runs `alembic upgrade head` and `seed_admin` before exec'ing
+    # the requested command — letting it run would race-seed the admin user
+    # with the placeholder hash that's still in .env at this point.
     HASH=$(printf '%s' "$ADMIN_PASSWORD" \
-        | dc run --rm -T api \
-              python -c 'import sys, bcrypt; sys.stdout.write(bcrypt.hashpw(sys.stdin.read().encode(), bcrypt.gensalt(rounds=12)).decode())' \
+        | dc run --rm -T --no-deps --entrypoint python api \
+              -c 'import sys, bcrypt; sys.stdout.write(bcrypt.hashpw(sys.stdin.read().encode(), bcrypt.gensalt(rounds=12)).decode())' \
         | tr -d '\r')
     if [ -z "$HASH" ] || [[ "$HASH" != \$2* ]]; then
         fail "bcrypt hash looks wrong: '${HASH:0:8}...'"
     fi
-    # Escape '$' and '/' for safe sed insertion
-    ESC=$(printf '%s' "$HASH" | sed 's/[\/&]/\\&/g')
-    sed -i.bak "s/^ADMIN_PASSWORD_HASH=.*/ADMIN_PASSWORD_HASH=${ESC}/" .env
-    rm -f .env.bak
+    # Use python (not sed) to write the hash so we don't have to escape
+    # the bcrypt `$` symbols against sed's replacement metachars.
+    HASH="$HASH" python3 -c '
+import os, pathlib
+p = pathlib.Path(".env")
+lines = p.read_text().splitlines()
+out = []
+for line in lines:
+    if line.startswith("ADMIN_PASSWORD_HASH="):
+        out.append("ADMIN_PASSWORD_HASH=" + os.environ["HASH"])
+    else:
+        out.append(line)
+p.write_text("\n".join(out) + "\n")
+'
+    chmod 600 .env
     unset ADMIN_PASSWORD ADMIN_PASSWORD_CONFIRM
     ok "ADMIN_PASSWORD_HASH written"
 fi
