@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:toto/features/reviews/review_models.dart';
 import 'package:toto/features/reviews/review_provider.dart';
@@ -25,7 +26,6 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
   @override
   Widget build(BuildContext context) {
     final today = ref.watch(todayReviewProvider);
-    final past = ref.watch(pastReviewsProvider);
 
     if (today is TodayReviewLoaded && !_initialised) {
       _controller.text = today.review.rawContent;
@@ -41,67 +41,21 @@ class _ReviewsScreenState extends ConsumerState<ReviewsScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.refresh(todayReviewProvider),
           ),
+          IconButton(
+            tooltip: '复盘报表',
+            icon: const Icon(Icons.insights_outlined),
+            onPressed: () => context.go('/review-report'),
+          ),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(pastReviewsProvider);
           await ref.read(todayReviewProvider.notifier).load();
         },
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _TodayCard(state: today, controller: _controller, onSave: _save),
-            const SizedBox(height: 20),
-            Text(
-              '历史复盘',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            past.when(
-              data: (items) {
-                final history = items
-                    .where((r) {
-                      final now = DateTime.now();
-                      return !(r.date.year == now.year &&
-                          r.date.month == now.month &&
-                          r.date.day == now.day);
-                    })
-                    .toList();
-                if (history.isEmpty) {
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        '暂无历史复盘',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  );
-                }
-                return Column(
-                  children: [
-                    for (final r in history) _HistoryTile(review: r),
-                  ],
-                );
-              },
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (_, __) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    '历史加载失败',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -323,81 +277,5 @@ class _AISection extends ConsumerWidget {
           ),
         );
     }
-  }
-}
-
-class _HistoryTile extends StatelessWidget {
-  const _HistoryTile({required this.review});
-  final Review review;
-
-  static const _moodEmojis = ['😢', '🙁', '😐', '🙂', '😄'];
-
-  @override
-  Widget build(BuildContext context) {
-    final preview = review.rawContent.trim();
-    final snippet = preview.length > 80
-        ? '${preview.substring(0, 80)}…'
-        : preview;
-    final dateLabel =
-        DateFormat('MM-dd EE', 'zh_CN').format(review.date.toLocal());
-    final mood = review.mood;
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 44,
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Text(
-                  dateLabel,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (snippet.isEmpty)
-                    Text(
-                      '（未填写）',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    )
-                  else
-                    Text(
-                      snippet,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(fontSize: 13),
-                    ),
-                  if (mood != null) ...[
-                    const SizedBox(height: 4),
-                    Text(_moodEmojis[(mood - 1).clamp(0, 4)],
-                        style: const TextStyle(fontSize: 16)),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
