@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchReviews } from "../api/reviews";
 import type { DailyReview } from "../types";
@@ -21,18 +21,16 @@ function MoodTrend({ reviews }: { reviews: DailyReview[] }) {
   }
   const W = 600, H = 120, pad = 10;
   const dx = (W - pad * 2) / (points.length - 1);
-  const coords = points.map((r, i) => {
-    const x = pad + dx * i;
-    const y = H - pad - ((r.mood! - 1) / 4) * (H - pad * 2);
-    return `${x},${y}`;
-  });
+  const coords = points.map((r, i) => ({
+    x: pad + dx * i,
+    y: H - pad - ((r.mood! - 1) / 4) * (H - pad * 2),
+  }));
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-32">
-      <polyline points={coords.join(" ")} fill="none" stroke="#8B5CF6" strokeWidth="2" />
-      {coords.map((c, i) => {
-        const [x, y] = c.split(",");
-        return <circle key={i} cx={x} cy={y} r="3" fill="#A78BFA" />;
-      })}
+      <polyline points={coords.map((p) => `${p.x},${p.y}`).join(" ")} fill="none" stroke="#8B5CF6" strokeWidth="2" />
+      {coords.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="3" fill="#A78BFA" />
+      ))}
     </svg>
   );
 }
@@ -40,10 +38,20 @@ function MoodTrend({ reviews }: { reviews: DailyReview[] }) {
 export default function ReviewReportPage() {
   const [range, setRange] = useState(30);
   const [selected, setSelected] = useState<DailyReview | null>(null);
+  const today = daysAgo(0);
+
+  useEffect(() => {
+    if (!selected) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelected(null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [selected]);
 
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["review-report", range],
-    queryFn: () => fetchReviews({ start_date: daysAgo(range), end_date: daysAgo(0) }),
+    queryFn: () => fetchReviews({ start_date: daysAgo(range), end_date: today }),
   });
 
   const sorted = [...reviews].sort((a, b) => b.date.localeCompare(a.date));
@@ -97,12 +105,14 @@ export default function ReviewReportPage() {
           onClick={() => setSelected(null)}
         >
           <div
+            role="dialog"
+            aria-modal="true"
             className="bg-surface-raised rounded-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto border border-white/[0.08]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold">{selected.date} {selected.mood != null && MOOD_EMOJIS[selected.mood - 1]}</h2>
-              <button onClick={() => setSelected(null)} className="text-white/40 hover:text-white">✕</button>
+              <button onClick={() => setSelected(null)} aria-label="关闭" className="text-white/40 hover:text-white">✕</button>
             </div>
             <div className="text-[10px] uppercase tracking-widest text-white/25 mb-1">原始复盘</div>
             <p className="text-sm text-white/75 whitespace-pre-wrap mb-4">{selected.raw_content || "（空）"}</p>

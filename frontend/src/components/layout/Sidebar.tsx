@@ -17,7 +17,7 @@ const NAV_GROUPS = [
     items: [
       { icon: "🗒️", name: "速记收集箱", path: "/memos" },
       { icon: "📝", name: "每日复盘", path: "/reviews" },
-      { icon: "📊", name: "复盘报表", path: "/review-report" },
+      { icon: "📈", name: "复盘报表", path: "/review-report" },
       { icon: "📊", name: "周/月汇总", path: "/summaries" },
       { icon: "🔥", name: "习惯打卡", path: "/habits" },
       { icon: "🍅", name: "番茄钟", path: "/pomodoro" },
