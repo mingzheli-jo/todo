@@ -58,8 +58,9 @@ echo "Starting services..."
 dc up -d --remove-orphans
 
 echo "Waiting for API to be ready..."
+# Use python (always present in the api image) instead of curl (not bundled).
 for i in $(seq 1 60); do
-    if dc exec -T api curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+    if dc exec -T api python -c 'import urllib.request,sys; urllib.request.urlopen("http://localhost:8000/health",timeout=2)' >/dev/null 2>&1; then
         echo "API is healthy!"
         break
     fi
@@ -75,9 +76,22 @@ echo "Running database migrations explicitly..."
 dc exec -T api alembic upgrade head
 
 echo "Verifying auth endpoint..."
-HTTP_STATUS=$(dc exec -T api curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/api/auth/login \
-    -H "Content-Type: application/json" \
-    -d "{\"username\":\"${ADMIN_USERNAME:-admin}\",\"password\":\"check\"}" 2>/dev/null || true)
+HTTP_STATUS=$(dc exec -T api python -c '
+import json, urllib.request, urllib.error
+req = urllib.request.Request(
+    "http://localhost:8000/api/auth/login",
+    data=json.dumps({"username": "'"${ADMIN_USERNAME:-admin}"'", "password": "__wrong__"}).encode(),
+    headers={"Content-Type": "application/json"},
+    method="POST",
+)
+try:
+    r = urllib.request.urlopen(req, timeout=3)
+    print(r.status)
+except urllib.error.HTTPError as e:
+    print(e.code)
+except Exception:
+    print(0)
+' 2>/dev/null || echo "0")
 # 401 means auth is wired (wrong password is expected); 422/200 also acceptable
 if [[ "$HTTP_STATUS" == "000" || "$HTTP_STATUS" == "502" || "$HTTP_STATUS" == "503" ]]; then
     echo "WARNING: Auth endpoint returned $HTTP_STATUS — check API logs"

@@ -245,9 +245,9 @@ dc up -d --remove-orphans
 # 7. Wait for api health
 # ---------------------------------------------------------------------------
 step "Waiting for api to become healthy"
+# The api image doesn't ship curl, so probe via python's urlopen instead.
 for i in $(seq 1 60); do
-    if dc exec -T api \
-            curl -fsS http://localhost:8000/health >/dev/null 2>&1; then
+    if dc exec -T api python -c 'import urllib.request; urllib.request.urlopen("http://localhost:8000/health",timeout=2)' >/dev/null 2>&1; then
         ok "api healthy after ${i}s"
         break
     fi
@@ -269,11 +269,22 @@ dc exec -T api alembic upgrade head
 # 9. Smoke test
 # ---------------------------------------------------------------------------
 step "Smoke-testing the auth endpoint"
-HTTP=$(dc exec -T api \
-    curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/api/auth/login \
-        -H 'Content-Type: application/json' \
-        -d "{\"username\":\"${ADMIN_USERNAME}\",\"password\":\"__wrong__\"}" \
-    || true)
+HTTP=$(dc exec -T api python -c "
+import json, urllib.request, urllib.error
+req = urllib.request.Request(
+    'http://localhost:8000/api/auth/login',
+    data=json.dumps({'username': '${ADMIN_USERNAME}', 'password': '__wrong__'}).encode(),
+    headers={'Content-Type': 'application/json'},
+    method='POST',
+)
+try:
+    r = urllib.request.urlopen(req, timeout=3)
+    print(r.status)
+except urllib.error.HTTPError as e:
+    print(e.code)
+except Exception:
+    print(0)
+" 2>/dev/null || echo "0")
 case "$HTTP" in
     401|422) ok "Auth endpoint responsive (HTTP $HTTP — wrong password rejected as expected)";;
     200)     warn "Auth endpoint returned 200 with __wrong__ — that's suspicious";;
