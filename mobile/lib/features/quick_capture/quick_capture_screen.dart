@@ -26,6 +26,7 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
   }
 
   Future<void> _close() async {
+    if (!mounted) return;
     // 关闭并退回桌面
     await SystemNavigator.pop();
   }
@@ -45,7 +46,8 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
         await ref.read(memoRepositoryProvider).create(text);
       }
       await _close();
-    } catch (_) {
+    } on Object catch (e) {
+      debugPrint('QuickCapture save failed: $e');
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -58,9 +60,9 @@ class _QuickCaptureScreenState extends ConsumerState<QuickCaptureScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black.withOpacity(0.4),
+      backgroundColor: Colors.black.withValues(alpha: 0.4),
       body: GestureDetector(
-        onTap: _close, // 点击空白处关闭
+        onTap: _saving ? null : _close, // 点击空白处关闭
         child: Center(
           child: GestureDetector(
             onTap: () {}, // 吸收卡片内点击

@@ -31,6 +31,8 @@
             android:text="📝 备忘"
             android:textColor="#FFFFFF"
             android:textSize="14sp"
+            android:clickable="true"
+            android:focusable="true"
             android:background="#6366F1" />
 
         <TextView
@@ -44,6 +46,8 @@
             android:text="✓ 任务"
             android:textColor="#FFFFFF"
             android:textSize="14sp"
+            android:clickable="true"
+            android:focusable="true"
             android:background="#8B5CF6" />
     </LinearLayout>
 </LinearLayout>

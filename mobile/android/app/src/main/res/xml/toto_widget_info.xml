@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Pure action widget: no periodic data refresh, so updatePeriodMillis is 0. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="180dp"
     android:minHeight="80dp"
@@ -6,4 +7,5 @@
     android:targetCellHeight="1"
     android:resizeMode="horizontal"
     android:widgetCategory="home_screen"
+    android:updatePeriodMillis="0"
     android:initialLayout="@layout/toto_widget" />
