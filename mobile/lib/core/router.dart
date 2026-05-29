@@ -10,6 +10,7 @@ import 'package:toto/features/okrs/okrs_screen.dart';
 import 'package:toto/features/pomodoro/pomodoro_screen.dart';
 import 'package:toto/features/profile/profile_screen.dart';
 import 'package:toto/features/projects/projects_screen.dart';
+import 'package:toto/features/quick_capture/quick_capture_screen.dart';
 import 'package:toto/features/reviews/reviews_screen.dart';
 import 'package:toto/features/settings/settings_screen.dart';
 import 'package:toto/features/tasks/tasks_screen.dart';
@@ -39,6 +40,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/login',
         builder: (_, __) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/quick',
+        builder: (_, state) => QuickCaptureScreen(
+          type: state.uri.queryParameters['type'] == 'task' ? 'task' : 'memo',
+        ),
       ),
       ShellRoute(
         builder: (context, state, child) => RootShell(child: child),
