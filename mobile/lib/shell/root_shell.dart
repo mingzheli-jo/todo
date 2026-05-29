@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toto/features/memos/widgets/memo_quick_add_sheet.dart';
 import 'package:toto/features/tasks/widgets/task_form_sheet.dart';
 
 class RootShell extends StatelessWidget {
@@ -66,12 +67,56 @@ class RootShell extends StatelessWidget {
   void _showQuickAdd(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.task_alt_rounded),
+              title: const Text('新建任务'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _openTaskForm(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.note_add_rounded),
+              title: const Text('新建备忘'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _openMemoSheet(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openTaskForm(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
       isScrollControlled: true,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => const TaskFormSheet(),
+    );
+  }
+
+  void _openMemoSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const MemoQuickAddSheet(),
     );
   }
 
@@ -84,7 +129,8 @@ class RootShell extends StatelessWidget {
         location == '/habits' ||
         location == '/okrs' ||
         location == '/projects' ||
-        location == '/settings') {
+        location == '/settings' ||
+        location == '/memos') {
       return 4;
     }
     return 0; // '/' → home

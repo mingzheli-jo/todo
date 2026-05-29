@@ -66,6 +66,12 @@ class ProfileScreen extends ConsumerWidget {
             child: Column(
               children: [
                 _ProfileTile(
+                  icon: Icons.sticky_note_2_outlined,
+                  label: '速记收集箱',
+                  onTap: () => context.go('/memos'),
+                ),
+                const Divider(height: 1, indent: 56),
+                _ProfileTile(
                   icon: Icons.today_outlined,
                   label: '每日复盘',
                   onTap: () => context.push('/reviews'),

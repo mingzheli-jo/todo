@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:toto/core/auth/auth_provider.dart';
 import 'package:toto/features/auth/login_screen.dart';
 import 'package:toto/features/habits/habits_screen.dart';
+import 'package:toto/features/memos/memos_screen.dart';
 import 'package:toto/features/home/home_screen.dart';
 import 'package:toto/features/okrs/okrs_screen.dart';
 import 'package:toto/features/pomodoro/pomodoro_screen.dart';
@@ -73,6 +74,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/settings',
             builder: (_, __) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/memos',
+            builder: (_, __) => const MemosScreen(),
           ),
           GoRoute(
             path: '/profile',
